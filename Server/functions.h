@@ -21,5 +21,8 @@ std::string conflictCheck(std::string username, std::vector<User> &users);
 bool appointmentUpdate(std::string username, std::vector<User> &users, int index, std::string field, std::string change);
 std::string timeRange(std::string username, std::vector<User> &users, std::string dateStart, std::string dateEnd);
 bool inTimeRange(Appointment appoint, std::string dateStart,std::string dateEnd);
+void loginListNull();
+bool checkLogin(std::string username);
+void removeUserLogin(std::string username);
 
 #endif //LAB2_FUNCTIONS

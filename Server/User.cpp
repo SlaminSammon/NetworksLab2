@@ -26,11 +26,11 @@ bool User::update(std::string field, std::string item){
 		printf("%s\n", username.c_str());
 		return true;
 	}
-	else if(tolower(field[0]) == 'b'){
+	else if(tolower(field[0]) == 'c'){
 		email = item;
 		return true;
 	}
-	else if(tolower(field[0]) == 'c'){
+	else if(tolower(field[0]) == 'b'){
 		passwd = item;
 		return true;
 	}

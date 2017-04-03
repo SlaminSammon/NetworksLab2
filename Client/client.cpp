@@ -83,31 +83,44 @@ int main(int argc, char *argv[]){
                     cout << "Login successful!!";
                     break;
                 }
-                else cout << "Login failed.";
+                else if(input.compare("USER") == 0) cout << "Invalid Username\n";
+                else if(input.compare("PASS") == 0) cout << "Invalid Password\n";
+                else if(input.compare("LOGIN") == 0) cout << "User already signed in.\n";
+
             }
         }
         //If we are creatting a new user
         else if(toupper(input[0]) == 66){
-            send(sockfd,input.c_str(),512,0);
-            cout << "Enter username:\n";
-            getline(cin, input);
-            username = input;
-            //Send the username
-            send(sockfd,input.c_str(),512,0);
-            //Get the password
-            cout << "Enter password:\n";
-            getline(cin, input);
-            send(sockfd, input.c_str(), 512,0);
-            cout << "Enter email:\n";
-            getline(cin, input);
-            send(sockfd, input.c_str(), 512,0);
-            cout << "Enter phone:\n";
-            getline(cin, input);
-            send(sockfd, input.c_str(), 512,0);
-            cout << "Enter your name:\n";
-            getline(cin, input);
-            send(sockfd, input.c_str(), 512,0);
-            
+            while(1){
+                send(sockfd,input.c_str(),512,0);
+                cout << "Enter username:\n";
+                getline(cin, input);
+                username = input;
+                //Send the username
+                send(sockfd,input.c_str(),512,0);
+                //Get the password
+                cout << "Enter password:\n";
+                getline(cin, input);
+                send(sockfd, input.c_str(), 512,0);
+                cout << "Enter email:\n";
+                getline(cin, input);
+                send(sockfd, input.c_str(), 512,0);
+                cout << "Enter phone:\n";
+                getline(cin, input);
+                send(sockfd, input.c_str(), 512,0);
+                cout << "Enter your name:\n";
+                getline(cin, input);
+                send(sockfd, input.c_str(), 512,0);
+
+                numbytes = recv(sockfd, buf,512,0);
+                buf[numbytes] = '\0';
+                input = buf;
+                if(input.compare("ERR") == 0){
+                    cout << "Username exists\n";
+                    input = "B";
+                }
+                else break;
+            }
         }
         else if(toupper(input[0]) == 67){
             cout << "Goodbye!!!\n";
@@ -341,13 +354,14 @@ int main(int argc, char *argv[]){
                 }
             }
             else if(toupper(input[0]) == 70){
+                cout << "Butts";
                 if ((numbytes = recv(sockfd, buf, MAXDATASIZE, 0)) == -1) {
                         perror("recv");
                         exit(1);
                     }
-                    buf[numbytes] = '\0';
-                    input = buf;
-                    cout << input;
+                buf[numbytes] = '\0';
+                input = buf;
+                cout << "hih";
             }
             else if(toupper(input[0]) == 71){
                 vector<string> appointments;
@@ -445,6 +459,9 @@ int main(int argc, char *argv[]){
                 else{
                     cout << "Appointments in time range:\n" << input << "\n";
                 }
+            }
+            else{
+                cout << "How'd you get here?\n";
             }
             
         /*if(numbytes == 0 || strncmp(sendbuf,"bye",3) == 0){

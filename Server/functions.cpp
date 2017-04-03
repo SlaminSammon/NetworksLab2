@@ -20,6 +20,7 @@ void readUserFile(std::vector<User> &users){
 	std::ifstream file;
 	std::vector<std::string> data (5,"");
 	std::string in;
+	users.clear();
 	int j=0;
 	file.open("users.csv");
 	while(file.good()){
@@ -79,8 +80,8 @@ void updateUserFile(std::vector<User> &users){
 	std::string loader = "";
 	if(myfile.is_open()){
 		for(int i =0; i<users.size(); ++i){
-			if(i != users.size()-1) myfile << users[i].getCsvString() + ",";
-			else myfile << users[i].getCsvString();
+			if(i != users.size()-1) myfile << users[i].getCsvString() + ",\n";
+			else myfile << users[i].getCsvString()+ "\n";
 		}
 		myfile.close();
 	}
@@ -125,4 +126,65 @@ bool inTimeRange(Appointment appoint, std::string dateStart,std::string dateEnd)
 	std::string appointDate = appoint.getDate();
 	if(appointDate >= dateStart && appointDate <= dateEnd) return true;
 	else return false;
+}
+void loginListNull(){
+	std::ofstream myfile ("login.txt");
+	if(myfile.is_open()){
+		myfile.close();
+	}
+	else{
+		printf("Error in file\n");
+	}
+}
+bool checkLogin(std::string username){
+	std::ifstream file;
+	std::vector<std::string> strings;
+	std::string in ="";
+	file.open("login.txt");
+	//read in the login file
+	while(file.good()){
+		getline(file,in);
+		strings.push_back(in);
+	}
+	// check to see if the user was already logged in
+	for(int i =0; i< strings.size(); ++i){
+		if(username == strings[i]) return false;
+	}
+	file.close();
+	std::ofstream myfile ("login.txt");
+	//if user wasn't logged in rewrite file adding this user.
+	if(myfile.is_open()){
+		for(int i = 0; i<strings.size(); ++i){
+			myfile << strings[i] + "\n";
+		}
+		myfile << username;
+		myfile.close();
+	}
+	else{
+		printf("Error in file\n");
+	}
+	return true;
+}
+void removeUserLogin(std::string username){
+	std::ifstream file;
+	std::vector<std::string> strings;
+	std::string in ="";
+	file.open("login.txt");
+	//read in the login file
+	while(file.good()){
+		getline(file,in);
+		strings.push_back(in);
+	}
+	file.close();
+	std::ofstream myfile ("login.txt");
+	//rewrite file without user
+	if(myfile.is_open()){
+		for(int i = 0; i<strings.size(); ++i){
+			if(strings[i] != username) myfile << strings[i] + "\n";
+		}
+		myfile.close();
+	}
+	else{
+		printf("Error in file\n");
+	}
 }

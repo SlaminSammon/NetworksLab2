@@ -81,6 +81,8 @@ int main(void) {
         }
         printf("server: got connection from %s\n",  inet_ntoa(their_addr.sin_addr));
         if(!fork()){
+            //reinitialize db in case something has changed
+            readUserFile(userList);
             recvbuf = (char*) calloc(512,sizeof(char));
             //Check for login
             std::string username, password,input;
@@ -123,19 +125,32 @@ int main(void) {
                         password = recvbuf;
                         //Find the index in the vector where the username exists
                         int index = verifyUser(username, userList);
+                        printf("%d\n", index);
                         //If we found a proper user
                         if(index != -1){
                             //If the passwor matches pass a success and break
                             if(passwordVerify(password, userList, index)){
-                                input = "SUCCESS\0";
-                                if(send(new_fd, input.c_str(), 512, 0) == -1){
-                                    perror("send");
-                                    close(new_fd);
-                                    exit(1);
+                                // check if user is already logged in.
+                                if(checkLogin(username)){
+                                    input = "SUCCESS\0";
+                                    if(send(new_fd, input.c_str(), 512, 0) == -1){
+                                        perror("send");
+                                        close(new_fd);
+                                        exit(1);
+                                    }
+                                    //Break out of the loops
+                                    moveOn = true;
+                                    break;
                                 }
-                                //Break out of the loops
-                                moveOn = true;
-                                break;
+                                //if user was already logged in let client know
+                                else{
+                                    input = "LOGIN\0";
+                                    if(send(new_fd, input.c_str(), 512, 0) == -1){
+                                        perror("send");
+                                        close(new_fd);
+                                        exit(1);
+                                    }
+                                }
                             }
                             //If the pass word is wrong tell the client we had an error
                             else{
@@ -149,13 +164,13 @@ int main(void) {
                         }
                         //if the username doesn't exist tell client that the user name doesnt exist
                         else{
-                           input = "USER\0";
+                            input = "USER\0";
                             if(send(new_fd, input.c_str() , 512, 0) == -1){
                                 perror("send");
                                 close(new_fd);
                                 exit(1);
-                            }  
-                        }
+                        }  
+                    }
                     }
                 }
                 //If we are adding a new user
@@ -205,14 +220,36 @@ int main(void) {
                         close(new_fd);
                         exit(1);
                     }
-                    recvbuf[numbytes] = '\0';
-                    name = recvbuf;
-                    User newUser (user,email,pass,phone,name);
-                    userList.push_back(newUser);
-                    updateUserFile(userList);
-                    username = user;
-                    updateAppointmentFile(username, userList);
-                    printf("User created!\n");
+                    if(verifyUser(user,userList) != -1){
+                        recvbuf[numbytes] = '\0';
+                        name = recvbuf;
+                        User newUser (user,email,pass,phone,name);
+                        userList.push_back(newUser);
+                        updateUserFile(userList);
+                        username = user;
+                        checkLogin(username);
+                        updateAppointmentFile(username, userList);
+                        printf("User created!\n");
+                        input = "SUCCESS\0";
+                        if(send(new_fd, input.c_str() , 512, 0) == -1){
+                            perror("send");
+                            close(new_fd);
+                            _exit(1);
+                        }
+                    }
+                    else{
+                        input = "ERR\0";
+                        if(send(new_fd, input.c_str() , 512, 0) == -1){
+                            perror("send");
+                            close(new_fd);
+                            _exit(1);
+                        }
+                    }
+                }
+                else if((toupper(input[0]) == 'C') || numbytes==0){
+                    printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                    close(new_fd);
+                    _exit(0);
                 }
             }
             while(1){
@@ -241,6 +278,7 @@ int main(void) {
                                 close(new_fd);
                                 _exit(1);
                             }
+                            removeUserLogin(username);
                             updateUserFile(userList);
                             _exit(0);  
                         }
@@ -420,6 +458,7 @@ int main(void) {
                 else if(toupper(recvbuf[0]) == 'F'){
                     //conflict check returns all of the conflicts
                     input = conflictCheck(username, userList);
+                    input = "";
                     //if there are no conflicts set input to NONE
                     if(input.compare("") == 0) input = "NONE";
                     //send data
@@ -531,33 +570,14 @@ int main(void) {
                 }
                 else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
                     printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                    removeUserLogin(username);
                     close(new_fd);
                     _exit(0);
                 }
             }
             close(sockfd);
-            for(;;){
-                numbytes=recv(new_fd, recvbuf, 512, 0);
-                printf("%s\n", recvbuf);
-                if(numbytes < 0){
-                    perror("recv");
-                    close(new_fd);
-                    _exit(1);
-                }else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
-                    printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
-                    close(new_fd);
-                    _exit(0);
-                }
-                printf("Recieved from %s: %s\n", inet_ntoa(their_addr.sin_addr), recvbuf);
-                
-                if(send(new_fd, recvbuf, 512, 0) == -1){
-                    perror("send");
-                    close(new_fd);
-                    _exit(1);
-                }
-            }
             close(new_fd);
-            exit(0);
+            _exit(0);
         }
         close(new_fd);
     }
