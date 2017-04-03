@@ -10,8 +10,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "clientFunctions.h"
 
-#define PORT 3490
+#define PORT 14760
 #define MAXDATASIZE 512
 using namespace std;
 
@@ -128,12 +129,18 @@ int main(int argc, char *argv[]){
         }
         for(;;){
             //Ask the user what they would like to change
-            cout << "\nA.Delete User\nB.Modify User Info\nC.Add new appointment\nD.Remove appointment."
-                    << "\nE.Display appointments.\nF.Check for schedule conflicts\nG.Update appointment\nH.View Appointments in Time Range\n";
-            getline(cin, input);
-            if (toupper(input[0]) < 'A' || toupper(input[0]) > 'H'){ 
-                cout << "Disconnecting from server.\n";
-                exit(0);
+            while(1){
+                cout << "\nA.Delete User\nB.Modify User Info\nC.Add new appointment\nD.Remove appointment."
+                        << "\nE.Display appointments.\nF.Check for schedule conflicts\nG.Update appointment\nH.View Appointments in Time Range\nZ.Exit\n";
+                getline(cin, input);
+                if(toupper(input[0]) == 'Z'){
+                    cout << "Disconnecting from server\n";
+                    exit(0);
+                }
+                else if (input == "" || toupper(input[0]) < 'A' || toupper(input[0]) > 'H' ||input.length() > 1){ 
+                    cout << "Invalid input\n";
+                }
+                else break;
             }
             numbytes=sizeof(sendbuf);
             sendbuf[numbytes] = '\0';
@@ -161,13 +168,13 @@ int main(int argc, char *argv[]){
                     //if they say no don't flip the kill switch
                     else break;
                 }
-                //if kill switch is flipped send the server the want to kill
-                if(kill){
-                    if ((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
+                if ((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
                         exit(1);
                     }
+                //if kill switch is flipped send the server the want to kill
+                if(kill){
                     if ((numbytes = recv(sockfd, buf, MAXDATASIZE, 0)) == -1) {
                     perror("recv");
                     exit(1);
@@ -218,7 +225,8 @@ int main(int argc, char *argv[]){
                         cout << "Invalid input\n";
                     }
                     //if they say yes, change the field
-                    else if(toupper(decision[0]) == 'Y') break;
+                    else if(toupper(decision[0]) == 'Y' && input.length() !=0) break;
+                    if(input.length() == 0) cout << "Nothing was inputted...\n";
                 }
                 //send the change to the server
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
@@ -243,24 +251,38 @@ int main(int argc, char *argv[]){
             }
             else if(toupper(input[0]) == 67){
                 //Ask the user for info and send.
-                cout << "Enter the title of the appointment:\n";
-                getline(cin, input);
+                while(1){
+                    cout << "Enter the title of the appointment:\n";
+                    getline(cin, input);
+                    if(input.length() == 0) cout << "Nothing was inputted\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
                         exit(1);
                 }
                 //Not currently implemented, but make sure user implements a valid format
-                cout << "Enter the date of the appointment:\n";
-                getline(cin, input);
+                while(1){
+                    cout << "Enter the date of the appointment:\n";
+                    getline(cin, input);
+                    if(input.length() == 0) cout << "Nothing was inputted\n";
+                    else if(!checkDateFormat(input)) cout << "Invalid date.\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
                         exit(1);
                 }
                 //Not currently implemented, but make sure user implements a valid format
-                cout << "Enter the time of the appointment:\n";
-                getline(cin, input);
+                while(1){
+                    cout << "Enter the time of the appointment:\n";
+                    getline(cin, input);
+                    if(input.length() == 0) cout << "Nothing was inputted\n";
+                    else if(!checkTimeFormat(input)) cout << "Invalid time.\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
@@ -311,7 +333,7 @@ int main(int argc, char *argv[]){
                     stringstream ss(strInt);
                     ss >> intStr;
                     //check if the input is incorrect.
-                    if(intStr<1 || intStr > appointments.size()){
+                    if(intStr<1 || intStr > appointments.size() || input.length() == 0){
                         cout << "Invalid input\n\n";
                     }
                     else break;
@@ -354,14 +376,13 @@ int main(int argc, char *argv[]){
                 }
             }
             else if(toupper(input[0]) == 70){
-                cout << "Butts";
                 if ((numbytes = recv(sockfd, buf, MAXDATASIZE, 0)) == -1) {
                         perror("recv");
                         exit(1);
                     }
                 buf[numbytes] = '\0';
                 input = buf;
-                cout << "hih";
+                cout << input;
             }
             else if(toupper(input[0]) == 71){
                 vector<string> appointments;
@@ -393,7 +414,7 @@ int main(int argc, char *argv[]){
                     stringstream ss(strInt);
                     ss >> intStr;
                     //check if the input is incorrect.
-                    if(intStr<1 || intStr > appointments.size()){
+                    if(intStr<1 || intStr > appointments.size() || input.length() == 0){
                         cout << "Invalid input\n\n";
                     }
                     else break;
@@ -404,16 +425,27 @@ int main(int argc, char *argv[]){
                         close(sockfd);
                         exit(1);
                 }
-                cout << "Which field would you like to alter?\n";
-                cout << "A.Title\nB.Time\nC.Date\n";
-                getline(cin, input);
+                while(1){
+                    cout << "Which field would you like to alter?\n";
+                    cout << "A.Title\nB.Time\nC.Date\n";
+                    getline(cin, input);
+                    if(input.length() !=1)cout << "Invalid input\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
                         exit(1);
                 }
-                cout << "Enter the change you would like to make:\n";
-                getline(cin, input);
+                while(1){
+                    std::string checker = input;
+                    cout << "Enter the change you would like to make:\n";
+                    getline(cin, input);
+                    if(input == "") cout << "Invalid input\n";
+                    else if(toupper(checker[0]) == 'B' && !checkTimeFormat(input)) cout << "Invalid time.\n";
+                    else if(toupper(checker[0]) == 'C' && !checkDateFormat(input)) cout << "Invalid date.\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
@@ -433,15 +465,25 @@ int main(int argc, char *argv[]){
                 }
             }
             else if(toupper(input[0]) == 72){
-                cout << "Enter the start date:\n";
-                getline(cin,input);
+                while(1){
+                    cout << "Enter the start date:\n";
+                    getline(cin,input);
+                    if(input == "") cout << "Invalid input\n";
+                    else if(!checkDateFormat(input)) cout << "Invalid date.\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);
                         exit(1);
                 }
-                cout <<"Enter the end date\n";
-                getline(cin,input);
+                while(1){
+                    cout << "Enter the end date:\n";
+                    getline(cin,input);
+                    if(input == "") cout << "Invalid input\n";
+                    else if(!checkDateFormat(input)) cout << "Invalid date.\n";
+                    else break;
+                }
                 if((numbytes = send(sockfd, input.c_str(), MAXDATASIZE, 0)) == -1) {
                         perror("send");
                         close(sockfd);

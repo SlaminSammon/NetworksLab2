@@ -15,7 +15,7 @@
 #include "Appointment.h"
 #include <sstream>
 
-#define MYPORT 3490
+#define MYPORT 14760
 #define BACKLOG 10
 
 void sigchld_handler(int s){
@@ -38,6 +38,7 @@ int main(void) {
     std::vector<User> userList;
     //Initialize databases.
     readUserFile(userList);
+    loginListNull();
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
         exit(1);
@@ -99,7 +100,6 @@ int main(void) {
                 input = recvbuf;
                 //std::cout << toupper(input[0]);
                 //If the user passed in the option to login.
-                printf("%s\n",recvbuf);
                 if(toupper(input[0]) == 65){
                     //While we don't have an error
                     while(1){
@@ -110,9 +110,14 @@ int main(void) {
                             close(new_fd);
                             exit(1);
                         }
+                        else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                            printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                            removeUserLogin(username);
+                            close(new_fd);
+                            _exit(0);
+                        }
                         recvbuf[numbytes] = '\0';
                         username = recvbuf;
-                        printf("%s,\n", recvbuf);
                         //recieve password
                         numbytes=recv(new_fd, recvbuf, 512, 0);
                         if(numbytes < 0){
@@ -120,12 +125,16 @@ int main(void) {
                             close(new_fd);
                             exit(1);
                         }
+                        else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                            printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                            removeUserLogin(username);
+                            close(new_fd);
+                            _exit(0);
+                        }
                         recvbuf[numbytes] = '\0';
-                        printf("%s,\n", recvbuf);
                         password = recvbuf;
                         //Find the index in the vector where the username exists
                         int index = verifyUser(username, userList);
-                        printf("%d\n", index);
                         //If we found a proper user
                         if(index != -1){
                             //If the passwor matches pass a success and break
@@ -185,6 +194,12 @@ int main(void) {
                         close(new_fd);
                         exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     user = recvbuf;
                     numbytes=recv(new_fd, recvbuf, 512, 0);
@@ -194,6 +209,12 @@ int main(void) {
                         close(new_fd);
                         exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     pass = recvbuf;
                     //email
                     numbytes=recv(new_fd, recvbuf, 512, 0);
@@ -201,6 +222,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     email = recvbuf;
@@ -211,6 +238,12 @@ int main(void) {
                         close(new_fd);
                         exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     phone = recvbuf;
                     //Name
@@ -219,6 +252,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     if(verifyUser(user,userList) != -1){
                         recvbuf[numbytes] = '\0';
@@ -259,6 +298,12 @@ int main(void) {
                     close(new_fd);
                     _exit(1);
                 }
+                else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                 recvbuf[numbytes] = '\0';
                 //Deleting user
                 if(toupper(recvbuf[0]) == 'A'){
@@ -267,6 +312,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     if(toupper(recvbuf[0])== 'Y'){
@@ -301,6 +352,12 @@ int main(void) {
                         close(new_fd);
                         _exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     field = recvbuf;
                     numbytes=recv(new_fd, recvbuf, 512, 0);
@@ -308,6 +365,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         _exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     input = recvbuf;
@@ -341,6 +404,12 @@ int main(void) {
                         close(new_fd);
                         _exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     title = recvbuf;
                     //get appointment date
@@ -350,6 +419,12 @@ int main(void) {
                         close(new_fd);
                         _exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     date = recvbuf;
                     numbytes=recv(new_fd, recvbuf, 512, 0);
@@ -357,6 +432,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         _exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     //get appointment time
@@ -405,6 +486,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         _exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     //convert value into int
@@ -458,8 +545,8 @@ int main(void) {
                 else if(toupper(recvbuf[0]) == 'F'){
                     //conflict check returns all of the conflicts
                     input = conflictCheck(username, userList);
-                    input = "";
                     //if there are no conflicts set input to NONE
+                    printf("%s\n", input.c_str());
                     if(input.compare("") == 0) input = "NONE";
                     //send data
                     if(send(new_fd, input.c_str() , 512, 0) == -1){
@@ -493,6 +580,12 @@ int main(void) {
                         close(new_fd);
                         _exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     //convert value into int
                     input =recvbuf;
@@ -509,6 +602,12 @@ int main(void) {
                         close(new_fd);
                         _exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     input = recvbuf;
                     //recieve the change the user would like to make
@@ -517,6 +616,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         _exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     std::string change = recvbuf;
@@ -549,6 +654,12 @@ int main(void) {
                         close(new_fd);
                         _exit(1);
                     }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
+                    }
                     recvbuf[numbytes] = '\0';
                     std::string start = recvbuf;
                     //recieve  the end date
@@ -557,6 +668,12 @@ int main(void) {
                         perror("recv");
                         close(new_fd);
                         _exit(1);
+                    }
+                    else if(numbytes==0 || strncmp(recvbuf, "bye",3)== 0){
+                        printf("Client (%s) has been disconnected\n", inet_ntoa(their_addr.sin_addr));
+                        removeUserLogin(username);
+                        close(new_fd);
+                        _exit(0);
                     }
                     recvbuf[numbytes] = '\0';
                     std::string end = recvbuf;

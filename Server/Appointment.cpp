@@ -37,5 +37,5 @@ std::string Appointment::getTyme(){
 	return time;
 }
 std::string Appointment::sendCSVString(){
-	return date + "," + time + "," + title + "\n";
+	return date + "," + time + "," + title + ',';
 }

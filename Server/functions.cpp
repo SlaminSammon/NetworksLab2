@@ -12,7 +12,6 @@ bool passwordVerify(std::string passwd, std::vector<User> &users, int index){
 }
 int verifyUser(std::string username, std::vector<User> &users){
 	int i = getUserIndex(username,users);
-	std::cout << i << std::endl;
 	if(i != -1) return i;
 	return -1;
 }
@@ -28,7 +27,6 @@ void readUserFile(std::vector<User> &users){
 			getline(file, data[i], ',');
 		}
 		getline(file,in);
-		std::cout << data[0] << " "  <<data[1] << "\n";
 		User readUser (data[0],data[2],data[1],data[3],data[4]);
 		users.push_back(readUser);
 		users[j].loadAppointments();
@@ -46,6 +44,8 @@ bool deleteUser(std::string username, std::vector<User> &users){
 }
 bool updateUser(std::string username, std::string field, std::string input, std::vector<User> &users){
 	int i = getUserIndex(username, users);
+	int size = users.size();
+	printf("%d\n", size);
 	if(i != -1) return users[i].update(field,input);
 	return false;
 }
@@ -98,7 +98,7 @@ std::string conflictCheck(std::string username, std::vector<User> &users){
 	std::string returnString = "";
 	std::vector<Appointment> appoint = users[i].getAppointments();
 	for(int i = 0; i<appoint.size(); ++i){
-		for(int j = i+1; i<appoint.size();++j){
+		for(int j = i+1; j<appoint.size();++j){
 			if(appoint[i].getDate().compare(appoint[j].getDate()) == 0
 				&& appoint[i].getTyme().compare(appoint[j].getTyme()) == 0){
 				returnString += "Conflict: " + appoint[i].getTitle() + " and " + appoint[j].getTitle() + "\n";

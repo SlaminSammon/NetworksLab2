@@ -63,6 +63,7 @@ void User::loadAppointments(){
 		for(int i =0;i<3; ++i){
 			getline(file, data[i], ',');
 		}
+		getline(file, filename);
 		Appointment appoint (data[0],data[1],data[2]);
 		appointments.push_back(appoint);
 	}
@@ -89,6 +90,7 @@ void User::updateAppointmentList(){
 	if(myfile.is_open()){
 		for(int i =0; i<appointments.size(); ++i){
 			myfile << appointments[i].sendCSVString();
+			if(i != appointments.size()-1) myfile << "\n";
 		}
 		myfile.close();
 	}
