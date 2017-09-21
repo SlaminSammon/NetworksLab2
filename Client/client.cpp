@@ -24,7 +24,6 @@ int main(int argc, char *argv[]){
     struct sockaddr_in their_addr;
     string username;
     //Check for command line arguments
-    cout << "butts\n";
     if(argc != 2){
         fprintf(stderr, "usage: client hostname\n");
         exit(1);
